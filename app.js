@@ -17,7 +17,7 @@ app.get('/', (req, res) => { res.send('\n 👋 🌍 \n') })
 
 function getShitPoppin() {
 
-  const rtm = new RTMClient(process.env.TEST_TOKEN)
+  const rtm = new RTMClient(process.env.SLACK_TOKEN)
   rtm.start()
 
   console.log('*** Realtime connection to Slack started ***')
@@ -31,7 +31,7 @@ function getShitPoppin() {
 
     const {text} = message
 
-    if (message.type === 'message' && message.channel === process.env.TEST_CHANNEL_ID ) {
+    if (message.type === 'message' && message.channel === process.env.RODERICK_CHANNEL_ID ) {
       console.log(text)
 
       // we can use riskLevel later to determine how much to buy. lower risk == higher amount
@@ -65,8 +65,8 @@ function getShitPoppin() {
 
           console.log('buy amount: ', buyAmount)
           console.log('max price: ', maxBuyPrice)
-          // const purchase = await binance.createLimitBuyOrder(pairing, buyAmount, maxBuyPrice)
-          // console.log('result of attempted purchase: ', purchase)
+          const purchase = await binance.createLimitBuyOrder(pairing, buyAmount, maxBuyPrice)
+          console.log('result of attempted purchase: ', purchase)
 
         } else if (text.includes('SHORT')) {
 
