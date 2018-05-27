@@ -1,0 +1,20 @@
+{
+  "name": "choe-bot",
+  "version": "1.0.0",
+  "description": "Listen to the choe slack",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "choe-bot"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@slack/client": "^4.2.2",
+    "express": "^4.16.3",
+    "moment-timezone": "^0.5.17"
+  }
+}
