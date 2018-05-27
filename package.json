@@ -15,8 +15,11 @@
   "license": "ISC",
   "dependencies": {
     "@slack/client": "^4.2.2",
+    "body-parser": "^1.18.3",
     "ccxt": "^1.14.76",
+    "dotenv": "^5.0.1",
     "express": "^4.16.3",
+    "express-http-proxy": "^1.2.0",
     "moment-timezone": "^0.5.17"
   }
 }
