@@ -34,12 +34,15 @@ function getShitPoppin() {
     if (message.type === 'message' && message.channel === process.env.RODERICK_CHANNEL_ID ) {
       console.log(text)
 
-      // we can use riskLevel later to determine how much to buy. lower risk == higher amount
-      // it will be low, medium, or high
-      const riskLevel = RISK_LEVELS.find(level => text.toLowerCase().includes(level))
-
       // make sure it's a roderick signal and not just Eric chiming in with thoughts/opinions
-      if (text && VALID_SIGNAL.test(text) && !!riskLevel) {
+      if (text && VALID_SIGNAL.test(text)) {
+
+        // we can use riskLevel later to determine how much to buy. lower risk == higher amount
+        // it will be low, medium, or high
+        const riskLevel = RISK_LEVELS.find(level => text.toLowerCase().includes(level))
+        if (!riskLevel) {
+          return
+        }
 
         // grab the pairing from the string
         const pairing = text.match(PAIR)[0].trim()
@@ -59,9 +62,9 @@ function getShitPoppin() {
           const SLIPPAGE_TOLERANCE = 0.004 // % above last ask we're willing to pay in case another bot beats us
 
           const tokenInfo = await binance.fetchTicker(pairing)
-          const askingPrice = tokenInfo.ask
-          const maxBuyPrice = askingPrice * (1 + SLIPPAGE_TOLERANCE)
-          const buyAmount = RISK_AMOUNT / parseFloat(askingPrice)
+          const lastPrice = tokenInfo.last
+          const maxBuyPrice = lastPrice * (1 + SLIPPAGE_TOLERANCE)
+          const buyAmount = RISK_AMOUNT / parseFloat(lastPrice)
 
           console.log('buy amount: ', buyAmount)
           console.log('max price: ', maxBuyPrice)
