@@ -15,7 +15,7 @@ const PAIR = new RegExp(/[A-Z]{3,5}\/[A-Z]{3,5}/)
 const RISK_LEVELS = ['high', 'medium', 'low']
 
 
-const rtm = new RTMClient(TOKEN)
+const rtm = new RTMClient(TEST_TOKEN)
 
 rtm.start()
 
@@ -30,7 +30,7 @@ rtm.on('message', async message => {
 
   const {text} = message
 
-  if (message.type === 'message' && message.channel === RODERICK_CHANNEL_ID ) {
+  if (message.type === 'message' && message.channel === TEST_CHANNEL_ID ) {
     console.log(text)
 
     // we can use riskLevel later to determine how much to buy. lower risk == higher amount
@@ -64,7 +64,7 @@ rtm.on('message', async message => {
 
         console.log('buy amount: ', buyAmount)
         console.log('max price: ', maxBuyPrice)
-        const purchase = await binance.createLimitBuyOrder(pairing, buyAmount, maxBuyPrice)
+        // const purchase = await binance.createLimitBuyOrder(pairing, buyAmount, maxBuyPrice)
         console.log('result of attempted purchase: ', purchase)
 
       } else if (text.includes('SHORT')) {
