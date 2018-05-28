@@ -33,9 +33,10 @@ function getShitPoppin() {
     const {text} = message
 
     if (message.type === 'message' && message.channel === process.env.RODERICK_CHANNEL_ID ) {
+      const isResult = text.toLowerCase().includes('result')
 
       // make sure it's a roderick signal and not just Eric chiming in with thoughts/opinions
-      if (text && VALID_SIGNAL.test(text)) {
+      if (text && VALID_SIGNAL.test(text) && !isResult) {
 
         // we can use riskLevel later to determine how much to buy. lower risk == higher amount
         // it will be low, medium, or high
@@ -79,6 +80,7 @@ function getShitPoppin() {
 
         }
       } else {
+        console.log('getting here')
         sendEmail('Update from Eric Choe (non-signal)', text)
       }
     }
