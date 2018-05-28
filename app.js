@@ -84,7 +84,8 @@ function sendEmail(content) {
   var data = {
     from: 'Will Wallace <wallac.will@gmail.com>',
     to: 'wallac.will@gmail.com',
-    subject: 'Automated Crypto Purchase Initiated!',
+    cc: 'mt2344@gmail.com',
+    subject: 'Automated Purchase Initiated',
     text: content
   }
 
