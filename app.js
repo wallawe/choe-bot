@@ -26,7 +26,7 @@ function getShitPoppin() {
   let binance = new ccxt.binance ({
     apiKey: process.env.BINANCE_API,
     secret: process.env.BINANCE_SECRET,
-  });
+  })
 
   rtm.on('message', async message => {
 
@@ -89,7 +89,7 @@ function sendEmail(subject, text) {
   var data = {
     from: 'Will Wallace <wallac.will@gmail.com>',
     to: 'wallac.will@gmail.com',
-    cc: 'mt2344@gmail.com',
+    cc: 'mt2344@gmail.com, cullenawallace@gmail.com',
     subject,
     text
   }
