@@ -4,6 +4,7 @@ const bodyParser = require('body-parser')
 const ENV = process.env.NODE_ENV || 'development'
 const { RTMClient, WebClient } = require('@slack/client')
 const ccxt = require('ccxt')
+var mailgun = require('mailgun-js')({apiKey: process.env.MAILGUN_KEY, domain: process.env.MAILGUN_DOMAIN })
 
 const VALID_SIGNAL = new RegExp(/Signal [\d]{2,}: [A-Z]{2,6}\/[A-Z]{2,6}/)
 const PAIR = new RegExp(/[A-Z]{3,5}\/[A-Z]{3,5}/)
@@ -32,7 +33,6 @@ function getShitPoppin() {
     const {text} = message
 
     if (message.type === 'message' && message.channel === process.env.RODERICK_CHANNEL_ID ) {
-      console.log(text)
 
       // make sure it's a roderick signal and not just Eric chiming in with thoughts/opinions
       if (text && VALID_SIGNAL.test(text)) {
@@ -49,14 +49,13 @@ function getShitPoppin() {
 
         // Coin we want to buy
         const buy = pairing.split('/')[0]
+
         // Coin we want to sell
         const sell = pairing.split('/')[1]
 
         // check for inclusion of a risk level even though we're not using it right now.
         // this is so we don't trigger a purchase when he gives the results of a signal.
         if (text.includes('LONG')) {
-
-          console.log('going long here')
 
           const RISK_AMOUNT = 0.4 // amount of bitcoin to risk on any given trade. we can get more advanced later
           const SLIPPAGE_TOLERANCE = 0.004 // % above last ask we're willing to pay in case another bot beats us
@@ -66,10 +65,10 @@ function getShitPoppin() {
           const maxBuyPrice = lastPrice * (1 + SLIPPAGE_TOLERANCE)
           const buyAmount = RISK_AMOUNT / parseFloat(lastPrice)
 
-          console.log('buy amount: ', buyAmount)
-          console.log('max price: ', maxBuyPrice)
           const purchase = await binance.createLimitBuyOrder(pairing, buyAmount, maxBuyPrice)
-          console.log('result of attempted purchase: ', purchase)
+          const content = `We just purchased ${purchase.amount} ${buy} at a price of ${purchase.price} for a total cost of ${purchase.cost} ${sell}. Looking for 2.5-3% return.`
+
+          sendEmail(content)
 
         } else if (text.includes('SHORT')) {
 
@@ -78,6 +77,23 @@ function getShitPoppin() {
         }
       }
     }
+  })
+}
+
+function sendEmail(content) {
+  var data = {
+    from: 'Will Wallace <wallac.will@gmail.com>',
+    to: 'wallac.will@gmail.com',
+    subject: 'Automated Crypto Purchase Initiated!',
+    text: content
+  }
+
+  mailgun.messages().send(data, function (error, body) {
+    if (error) {
+      return console.log('Error sending email: ', error)
+    }
+
+    console.log('Email successfully sent', body)
   })
 }
 
