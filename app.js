@@ -58,7 +58,7 @@ function getShitPoppin() {
         if (text.includes('LONG')) {
 
           const RISK_AMOUNT = 0.4 // amount of bitcoin to risk on any given trade. we can get more advanced later
-          const SLIPPAGE_TOLERANCE = 0.004 // % above last ask we're willing to pay in case another bot beats us
+          const SLIPPAGE_TOLERANCE = 0.003 // % above last ask we're willing to pay in case another bot beats us
 
           const tokenInfo = await binance.fetchTicker(pairing)
           const lastPrice = tokenInfo.last
