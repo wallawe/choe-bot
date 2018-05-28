@@ -65,28 +65,33 @@ function getShitPoppin() {
           const maxBuyPrice = lastPrice * (1 + SLIPPAGE_TOLERANCE)
           const buyAmount = RISK_AMOUNT / parseFloat(lastPrice)
 
-          const purchase = await binance.createLimitBuyOrder(pairing, buyAmount, maxBuyPrice)
-          const content = `We just purchased ${purchase.amount} ${buy} at a price of ${purchase.price} for a total cost of ${purchase.cost} ${sell}. Looking for 2.5-3% return.`
+          if (process.env.NODE_ENV === 'production') {
+            const purchase = await binance.createLimitBuyOrder(pairing, buyAmount, maxBuyPrice)
+            const emailText = `We just purchased ${purchase.amount} ${buy} at a price of ${purchase.price} for a total cost of ${purchase.cost} ${sell}. Looking for 2.5-3% return.`
 
-          sendEmail(content)
+            sendEmail('Automated Purchase Initiated', emailText)
+          }
 
         } else if (text.includes('SHORT')) {
 
           console.log('going short here')
+          // hook up to kraken!
 
         }
+      } else {
+        sendEmail('Update from Eric Choe (non-signal)', text)
       }
     }
   })
 }
 
-function sendEmail(content) {
+function sendEmail(subject, text) {
   var data = {
     from: 'Will Wallace <wallac.will@gmail.com>',
     to: 'wallac.will@gmail.com',
     cc: 'mt2344@gmail.com',
-    subject: 'Automated Purchase Initiated',
-    text: content
+    subject,
+    text
   }
 
   mailgun.messages().send(data, function (error, body) {
