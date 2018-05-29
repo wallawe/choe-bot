@@ -47,7 +47,12 @@ function getShitPoppin() {
         }
 
         // grab the pairing from the string
-        const pairing = text.match(PAIR)[0].trim()
+        let pairing = text.match(PAIR)[0].trim()
+
+        // one off pairing change for NANO bc they changed their name after listing
+        if (pairing === 'NANO/BTC') {
+          pairing = 'XRB/BTC'
+        }
 
         // Coin we want to buy
         const buy = pairing.split('/')[0]
