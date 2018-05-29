@@ -1,7 +1,6 @@
 require('dotenv').load()
 const express = require('express')
 const bodyParser = require('body-parser')
-const ENV = process.env.NODE_ENV || 'development'
 const { RTMClient, WebClient } = require('@slack/client')
 const ccxt = require('ccxt')
 var mailgun = require('mailgun-js')({apiKey: process.env.MAILGUN_KEY, domain: process.env.MAILGUN_DOMAIN })
@@ -9,6 +8,7 @@ var mailgun = require('mailgun-js')({apiKey: process.env.MAILGUN_KEY, domain: pr
 const VALID_SIGNAL = new RegExp(/Signal [\d]{2,}: [A-Z]{2,6}\/[A-Z]{2,6}/)
 const PAIR = new RegExp(/[A-Z]{3,5}\/[A-Z]{3,5}/)
 const RISK_LEVELS = ['high', 'medium', 'low']
+const inDevelopment = process.env.NODE_ENV === 'development'
 
 let app = express()
 app.use(bodyParser.json())
@@ -64,7 +64,7 @@ function getShitPoppin() {
         // this is so we don't trigger a purchase when he gives the results of a signal.
         if (text.includes('LONG')) {
 
-          const RISK_AMOUNT = 0.4 // amount of bitcoin to risk on any given trade. we can get more advanced later
+          const RISK_AMOUNT = 0.25 // amount of bitcoin to risk on any given trade. we can get more advanced later
           const SLIPPAGE_TOLERANCE = 0.003 // % above last ask we're willing to pay in case another bot beats us
 
           const tokenInfo = await binance.fetchTicker(pairing)
@@ -72,7 +72,7 @@ function getShitPoppin() {
           const maxBuyPrice = lastPrice * (1 + SLIPPAGE_TOLERANCE)
           const buyAmount = RISK_AMOUNT / parseFloat(lastPrice)
 
-          if (process.env.NODE_ENV === 'production') {
+          if (!inDevelopment) {
             const purchase = await binance.createLimitBuyOrder(pairing, buyAmount, maxBuyPrice)
             const emailText = `We just purchased ${purchase.amount} ${buy} at a price of ${purchase.price} for a total cost of ${purchase.cost} ${sell}. Looking for 2.5-3% return.`
 
@@ -86,7 +86,6 @@ function getShitPoppin() {
 
         }
       } else {
-        console.log('getting here')
         sendEmail('Update from Eric Choe (non-signal)', text)
       }
     }
@@ -94,6 +93,8 @@ function getShitPoppin() {
 }
 
 function sendEmail(subject, text) {
+  if (inDevelopment) return // don't actually send emails if testing locally
+
   var data = {
     from: 'Will Wallace <wallac.will@gmail.com>',
     to: 'wallac.will@gmail.com',
