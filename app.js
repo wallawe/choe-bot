@@ -62,21 +62,24 @@ function getShitPoppin() {
 
         // check for inclusion of a risk level even though we're not using it right now.
         // this is so we don't trigger a purchase when he gives the results of a signal.
-        if (text.includes('LONG')) {
+        if (text.includes('LONG') && sell === 'BTC') {
 
           const RISK_AMOUNT = 0.25 // amount of bitcoin to risk on any given trade. we can get more advanced later
-          const SLIPPAGE_TOLERANCE = 0.003 // % above last ask we're willing to pay in case another bot beats us
+          const SLIPPAGE_TOLERANCE = 0.005 // % above last ask we're willing to pay in case another bot beats us
 
-          const tokenInfo = await binance.fetchTicker(pairing)
-          const lastPrice = tokenInfo.last
-          const maxBuyPrice = lastPrice * (1 + SLIPPAGE_TOLERANCE)
-          const buyAmount = RISK_AMOUNT / parseFloat(lastPrice)
+          const recommendedBuyPrice = getBuyPrice(text, pairing)
+          const maxBuyPrice = recommendedBuyPrice * (1 + SLIPPAGE_TOLERANCE)
+          const buyAmount = RISK_AMOUNT / parseFloat(recommendedBuyPrice)
 
           if (!inDevelopment) {
-            const purchase = await binance.createLimitBuyOrder(pairing, buyAmount, maxBuyPrice)
-            const emailText = `We just purchased ${purchase.amount} ${buy} at a price of ${purchase.price} for a total cost of ${purchase.cost} ${sell}. Looking for 2.5-3% return.`
-
-            sendEmail('Automated Purchase Initiated', emailText)
+            try {
+              const purchase = await binance.createLimitBuyOrder(pairing, buyAmount, maxBuyPrice)
+              const emailText = `We just purchased ${purchase.amount} ${buy} at a price of ${purchase.price} for a total cost of ${purchase.cost} ${sell}. Looking for 2.5-3% return.`
+              sendEmail('Automated Purchase Initiated', emailText)
+              console.log('PURCHASE: ', purchase)
+            } catch(err) {
+              console.log(err)
+            }
           }
 
         } else if (text.includes('SHORT')) {
@@ -119,6 +122,12 @@ app.listen(process.env.PORT, (err) => {
     getShitPoppin()
   }
 })
+
+function getBuyPrice(text, pairing) {
+  const symbol = '->'
+  const first = text.split(symbol)[0]
+  return parseFloat(first.split(pairing).pop().trim())
+}
 
 // not currently in use
 const listChannels = async function() {
