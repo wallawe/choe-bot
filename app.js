@@ -64,7 +64,7 @@ function getShitPoppin() {
         // this is so we don't trigger a purchase when he gives the results of a signal.
         if (text.includes('LONG') && sell === 'BTC') {
 
-          const RISK_AMOUNT = 0.25 // amount of bitcoin to risk on any given trade. we can get more advanced later
+          const RISK_AMOUNT = 0.33 // amount of bitcoin to risk on any given trade. we can get more advanced later
           const SLIPPAGE_TOLERANCE = 0.005 // % above last ask we're willing to pay in case another bot beats us
 
           const recommendedBuyPrice = getBuyPrice(text, pairing)
