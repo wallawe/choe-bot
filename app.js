@@ -34,9 +34,10 @@ function getShitPoppin() {
 
     if (message.type === 'message' && message.channel === process.env.RODERICK_CHANNEL_ID ) {
       const isResult = text.toLowerCase().includes('result')
+      const isUpdate = text.toLowerCase().includes('update')
 
       // make sure it's a roderick signal and not just Eric chiming in with thoughts/opinions
-      if (text && VALID_SIGNAL.test(text) && !isResult) {
+      if (text && VALID_SIGNAL.test(text) && !isResult && !isUpdate) {
 
         // we can use riskLevel later to determine how much to buy. lower risk == higher amount
         // it will be low, medium, or high
