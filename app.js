@@ -5,8 +5,8 @@ const { RTMClient, WebClient } = require('@slack/client')
 const ccxt = require('ccxt')
 var mailgun = require('mailgun-js')({apiKey: process.env.MAILGUN_KEY, domain: process.env.MAILGUN_DOMAIN })
 
-const VALID_SIGNAL = new RegExp(/Signal [\d]{2,}: [A-Z]{2,6}\/[A-Z]{2,6}/)
-const PAIR = new RegExp(/[A-Z]{3,5}\/[A-Z]{3,5}/)
+const VALID_SIGNAL = new RegExp(/signal [\d]{2,}: [a-z]{2,6}\/[a-z]{2,6}/)
+const PAIR = new RegExp(/[a-z]{3,5}\/[a-z]{3,5}/)
 const RISK_LEVELS = ['high', 'medium', 'low']
 const inDevelopment = process.env.NODE_ENV === 'development'
 
@@ -30,29 +30,33 @@ function getShitPoppin() {
 
   rtm.on('message', async message => {
 
-    const {text} = message
+    let {text} = message
 
-    if (message.type === 'message' && message.channel === process.env.RODERICK_CHANNEL_ID ) {
-      const isResult = text.toLowerCase().includes('result')
-      const isUpdate = text.toLowerCase().includes('update')
+    if (message.type === 'message' && message.channel === process.env.RODERICK_CHANNEL_ID && typeof text === 'string') {
+
+      text = text.toLowerCase()
+
+      const isResult = text.includes('result')
+      const isUpdate = text.includes('update')
 
       // make sure it's a roderick signal and not just Eric chiming in with thoughts/opinions
       if (text && VALID_SIGNAL.test(text) && !isResult && !isUpdate) {
+        console.log('getting here')
 
         // we can use riskLevel later to determine how much to buy. lower risk == higher amount
         // it will be low, medium, or high
-        const riskLevel = RISK_LEVELS.find(level => text.toLowerCase().includes(level))
+        const riskLevel = RISK_LEVELS.find(level => text.includes(level))
         if (!riskLevel) {
           return
         }
 
+        // one off pairing change for NANO bc they changed their name after listing
+        if (text.includes('nano/btc')) {
+          text.replace('nano/btc', 'xrb/btc')
+        }
+
         // grab the pairing from the string
         let pairing = text.match(PAIR)[0].trim()
-
-        // one off pairing change for NANO bc they changed their name after listing
-        if (pairing === 'NANO/BTC') {
-          pairing = 'XRB/BTC'
-        }
 
         // Coin we want to buy
         const buy = pairing.split('/')[0]
@@ -62,7 +66,14 @@ function getShitPoppin() {
 
         // check for inclusion of a risk level even though we're not using it right now.
         // this is so we don't trigger a purchase when he gives the results of a signal.
-        if (text.includes('LONG') && sell === 'BTC') {
+        if (text.includes('short') && !text.includes('long')) {
+
+          console.log('going short here')
+          // hook up to kraken!
+
+        } else if (sell === 'btc'){
+
+          console.log('*** GOING LONG ***')
 
           const RISK_AMOUNT = 0.33 // amount of bitcoin to risk on any given trade. we can get more advanced later
           const SLIPPAGE_TOLERANCE = 0.005 // % above last ask we're willing to pay in case another bot beats us
@@ -71,9 +82,11 @@ function getShitPoppin() {
           const maxBuyPrice = recommendedBuyPrice * (1 + SLIPPAGE_TOLERANCE)
           const buyAmount = RISK_AMOUNT / parseFloat(recommendedBuyPrice)
 
+          console.log('recd buy price: ', recommendedBuyPrice)
+
           if (!inDevelopment) {
             try {
-              const purchase = await binance.createLimitBuyOrder(pairing, buyAmount, maxBuyPrice)
+              const purchase = await binance.createLimitBuyOrder(pairing.toUpperCase(), buyAmount, maxBuyPrice)
               const emailText = `We just purchased ${purchase.amount} ${buy} at a price of ${purchase.price} for a total cost of ${purchase.cost} ${sell}. Looking for 2.5-3% return.`
               sendEmail('Automated Purchase Initiated', emailText)
               console.log('PURCHASE: ', purchase)
@@ -81,12 +94,6 @@ function getShitPoppin() {
               console.log(err)
             }
           }
-
-        } else if (text.includes('SHORT')) {
-
-          console.log('going short here')
-          // hook up to kraken!
-
         }
       } else {
         sendEmail('Update from Eric Choe (non-signal)', text)
@@ -124,7 +131,7 @@ app.listen(process.env.PORT, (err) => {
 })
 
 function getBuyPrice(text, pairing) {
-  const symbol = '->'
+  const symbol = text.includes('->') ? '->' : '-&gt;'
   const first = text.split(symbol)[0]
   return parseFloat(first.split(pairing).pop().trim())
 }
