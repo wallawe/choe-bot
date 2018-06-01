@@ -17,7 +17,7 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.get('/', (req, res) => { res.send('\n 👋 🌍 \n') })
 
 function getShitPoppin() {
-
+  return // off
   const rtm = new RTMClient(process.env.SLACK_TOKEN)
   rtm.start()
 
