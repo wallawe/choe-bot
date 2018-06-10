@@ -5,7 +5,7 @@ const { RTMClient, WebClient } = require('@slack/client')
 const ccxt = require('ccxt')
 var mailgun = require('mailgun-js')({apiKey: process.env.MAILGUN_KEY, domain: process.env.MAILGUN_DOMAIN })
 
-const VALID_SIGNAL = new RegExp(/signal [\d]{2,}: [a-z]{2,6}\/[a-z]{2,6}/)
+const VALID_SIGNAL = new RegExp(/signal[\d]{2,}:[a-z]{2,6}\/[a-z]{2,6}/)
 const PAIR = new RegExp(/[a-z]{3,5}\/[a-z]{3,5}/)
 const RISK_LEVELS = ['high', 'medium', 'low']
 const inDevelopment = process.env.NODE_ENV === 'development'
@@ -17,7 +17,6 @@ app.use(bodyParser.urlencoded({ extended: true }))
 app.get('/', (req, res) => { res.send('\n 👋 🌍 \n') })
 
 function getShitPoppin() {
-  return // off
   const rtm = new RTMClient(process.env.SLACK_TOKEN)
   rtm.start()
 
@@ -34,13 +33,13 @@ function getShitPoppin() {
 
     if (message.type === 'message' && message.channel === process.env.RODERICK_CHANNEL_ID && typeof text === 'string') {
 
-      text = text.toLowerCase()
+      text = text.toLowerCase().replace(/ /g, '').replace(/[!@#$%^&*]/g, '')
 
       const isResult = text.includes('result')
       const isUpdate = text.includes('update')
 
       // make sure it's a roderick signal and not just Eric chiming in with thoughts/opinions
-      if (text && VALID_SIGNAL.test(text) && !isResult && !isUpdate) {
+      if (text && VALID_SIGNAL.test(text) && text.includes('buy:') && !isResult && !isUpdate) {
         console.log('getting here')
 
         // we can use riskLevel later to determine how much to buy. lower risk == higher amount
@@ -75,24 +74,27 @@ function getShitPoppin() {
 
           console.log('*** GOING LONG ***')
 
-          const RISK_AMOUNT = 0.33 // amount of bitcoin to risk on any given trade. we can get more advanced later
+          const RISK_AMOUNT = 0.05 // amount of bitcoin to risk on any given trade. we can get more advanced later
           const SLIPPAGE_TOLERANCE = 0.005 // % above last ask we're willing to pay in case another bot beats us
 
           const recommendedBuyPrice = getBuyPrice(text, pairing)
-          const maxBuyPrice = recommendedBuyPrice * (1 + SLIPPAGE_TOLERANCE)
+          // slippage tolerance currently not in use - take max buy price from provided range
+          // const maxBuyPrice = recommendedBuyPrice * (1 + SLIPPAGE_TOLERANCE)
           const buyAmount = RISK_AMOUNT / parseFloat(recommendedBuyPrice)
 
           console.log('recd buy price: ', recommendedBuyPrice)
 
           if (!inDevelopment) {
             try {
-              const purchase = await binance.createLimitBuyOrder(pairing.toUpperCase(), buyAmount, maxBuyPrice)
+              const purchase = await binance.createLimitBuyOrder(pairing.toUpperCase(), buyAmount, recommendedBuyPrice)
               const emailText = `We just purchased ${purchase.amount} ${buy} at a price of ${purchase.price} for a total cost of ${purchase.cost} ${sell}. Looking for 2.5-3% return.`
               sendEmail('Automated Purchase Initiated', emailText)
               console.log('PURCHASE: ', purchase)
             } catch(err) {
               console.log(err)
             }
+          } else {
+            // sendEmail('Automated Purchase Initiated', 'test email')
           }
         }
       } else {
@@ -103,7 +105,6 @@ function getShitPoppin() {
 }
 
 function sendEmail(subject, text) {
-  if (inDevelopment) return // don't actually send emails if testing locally
 
   var data = {
     from: 'Will Wallace <wallac.will@gmail.com>',
@@ -131,9 +132,9 @@ app.listen(process.env.PORT, (err) => {
 })
 
 function getBuyPrice(text, pairing) {
-  const symbol = text.includes('->') ? '->' : '-&gt;'
-  const first = text.split(symbol)[0]
-  return parseFloat(first.split(pairing).pop().trim())
+  const line = text.match(/buy:\d+([\.,]\d{1,})?-\d+([\.,]\d{1,})?/)
+  const buyPrice = text.split('-')[1]
+  return parseFloat(buyPrice)
 }
 
 // not currently in use
