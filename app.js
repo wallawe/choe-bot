@@ -84,7 +84,7 @@ function getShitPoppin() {
 
           console.log('recd buy price: ', recommendedBuyPrice)
 
-          if (inDevelopment) {
+          if (!inDevelopment) {
             try {
               const purchase = await binance.createLimitBuyOrder(pairing.toUpperCase(), buyAmount, recommendedBuyPrice)
               const emailText = `We just purchased ${purchase.amount} ${buy} at a price of ${purchase.price} for a total cost of ${purchase.cost} ${sell}. Looking for 2.5-3% return.`
