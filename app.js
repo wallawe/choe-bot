@@ -131,9 +131,9 @@ app.listen(process.env.PORT, (err) => {
   }
 })
 
-function getBuyPrice(text, pairing) {
+function getBuyPrice(text) {
   const line = text.match(/buy:\d+([\.,]\d{1,})?-\d+([\.,]\d{1,})?/)
-  const buyPrice = text.split('-')[1]
+  const buyPrice = line.split('-')[1]
   return parseFloat(buyPrice)
 }
 
