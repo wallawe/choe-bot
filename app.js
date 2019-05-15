@@ -107,9 +107,8 @@ function getShitPoppin() {
 function sendEmail(subject, text) {
 
   var data = {
-    from: 'Will Wallace <wallac.will@gmail.com>',
-    to: 'wallac.will@gmail.com',
-    cc: 'mt2344@gmail.com, cullenawallace@gmail.com',
+    from: '<email here>',
+    to: '<email here>',
     subject,
     text
   }
